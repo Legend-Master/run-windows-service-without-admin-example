@@ -1,0 +1,18 @@
+[package]
+name = "run-windows-service-without-admin-example"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.100"
+argh = "0.1.12"
+windows = { version = "0.62", features = [
+    "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_System_Services",
+    "Win32_Security",
+    "Win32_Security_Authorization",
+] }
+windows-service = "0.8"
+ipc-channel = "0.20.2"
+serde = { version = "1.0.228", features = ["derive"] }
