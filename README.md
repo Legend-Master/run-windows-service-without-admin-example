@@ -4,6 +4,8 @@ This example app show cased how you can register a Windows service that can be s
 
 This is often used by updaters so the update can be installed without a UAC prompt, in fact, the code is heavily inspired by the [Firefox Updater](https://wiki.mozilla.org/Windows_Service_Silent_Update)
 
+> Note: you need to be elevated to install the service, this is not a guide to bypass that, and this can be usually done by the installer when user installs you app
+
 ## Usage
 
 1. Use `cargo build` to build the app
