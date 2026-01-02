@@ -48,8 +48,20 @@ pub enum ToAppMessages {
 #[derive(Debug, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum ToServiceMessages {
+    /// Log something to `{current_exe}/../test.log`
+    LogSomething,
     /// Stop the service
     Stop,
+}
+
+/// Signal shutdown when dropped,
+/// this is used for when we lose the connection with our host app
+struct IpcChannelDropGuard(std::sync::mpsc::Sender<()>);
+
+impl Drop for IpcChannelDropGuard {
+    fn drop(&mut self) {
+        let _ = self.0.send(());
+    }
 }
 
 /// Service arguments
@@ -101,12 +113,24 @@ fn service_main_internal(service_arguments: ServiceArguments) -> anyhow::Result<
     to_app_sender.send(ToAppMessages::TestMessage).unwrap();
 
     let router = RouterProxy::new();
+    let ipc_channel_drop_guard = IpcChannelDropGuard(shutdown_tx.clone());
     router.add_typed_route(
         receiver,
         Box::new(move |message| {
+            // This closure will be dropped on `receiver` disconnect (e.g. app side shutdown),
+            // we capture a drop guard here to signal us to shutdown in this case
+            let _ = &ipc_channel_drop_guard;
             match message {
                 Ok(message) => {
                     match message {
+                        ToServiceMessages::LogSomething => {
+                            let path = std::env::current_exe()
+                                .unwrap()
+                                .parent()
+                                .unwrap()
+                                .join("test.log");
+                            std::fs::write(path, "Hello from service!").unwrap();
+                        }
                         ToServiceMessages::Stop => {
                             let _ = shutdown_tx.send(());
                         }

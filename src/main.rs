@@ -53,7 +53,9 @@ fn main() {
     };
 
     dbg!(receiver.recv().unwrap());
-    to_service_sender.send(ToServiceMessages::Stop).unwrap();
+    to_service_sender
+        .send(ToServiceMessages::LogSomething)
+        .unwrap();
 
     // stop_service(true).unwrap();
 }
