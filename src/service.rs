@@ -1,5 +1,5 @@
 use argh::FromArgs;
-use ipc_channel::{ipc::IpcSender, router::RouterProxy};
+use ipc_channel::{ipc::IpcSender, router::ROUTER};
 use serde::{Deserialize, Serialize};
 use std::{
     ffi::{OsStr, OsString},
@@ -112,9 +112,8 @@ fn service_main_internal(service_arguments: ServiceArguments) -> anyhow::Result<
         .unwrap();
     to_app_sender.send(ToAppMessages::TestMessage).unwrap();
 
-    let router = RouterProxy::new();
     let ipc_channel_drop_guard = IpcChannelDropGuard(shutdown_tx.clone());
-    router.add_typed_route(
+    ROUTER.add_typed_route(
         receiver,
         Box::new(move |message| {
             // This closure will be dropped on `receiver` disconnect (e.g. app side shutdown),
@@ -142,7 +141,6 @@ fn service_main_internal(service_arguments: ServiceArguments) -> anyhow::Result<
     );
 
     let _ = shutdown_rx.recv();
-    router.shutdown();
 
     on_service_stop(&status_handle)?;
 
